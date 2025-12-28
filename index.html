@@ -1,0 +1,3208 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ojunditeam Consulting - خدمات التمريض المنزلي في لبنان</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary: #0dcaf0;
+            --primary-dark: #0aa2c0;
+            --secondary: #6f42c1;
+            --secondary-dark: #5a32a3;
+            --success: #198754;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --dark: #121212;
+            --dark-light: #1e1e1e;
+            --gray: #2d2d2d;
+            --light: #f8f9fa;
+            --transition: all 0.3s ease;
+            --radius: 10px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .map-container {
+            height: 500px !important;
+            width: 100% !important;
+        }
+
+        #lebanon-map,
+        #detailed-lebanon-map,
+        #contact-map {
+            height: 100% !important;
+            width: 100% !important;
+            min-height: 400px;
+        }
+
+        .map-container {
+            height: 500px !important;
+            width: 100% !important;
+        }
+
+        #lebanon-map,
+        #detailed-lebanon-map,
+        #contact-map {
+            height: 100% !important;
+            width: 100% !important;
+            min-height: 400px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body[dir="ltr"] {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* الشريط العلوي */
+        header {
+            background-color: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            padding: 1rem 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), #4dd0e1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+            padding: 0.5rem 0;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary);
+            transition: var(--transition);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .call-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(13, 202, 240, 0.3);
+        }
+
+        .call-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(13, 202, 240, 0.4);
+        }
+
+        .language-switcher {
+            display: flex;
+            background: var(--dark-light);
+            border-radius: 50px;
+            padding: 0.3rem;
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: none;
+            color: var(--light);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .lang-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .mobile-menu {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* المحتوى الرئيسي */
+        .page {
+            display: none;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* قسم البطل */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(18, 18, 18, 0.9), rgba(30, 30, 30, 0.8)), url('https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 0 2rem;
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 3rem;
+        }
+
+        .hero-text {
+            flex: 1;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero-text h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero-text h1 span {
+            color: var(--primary);
+        }
+
+        .hero-text p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #ddd;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.9rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(13, 202, 240, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(13, 202, 240, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(13, 202, 240, 0.1);
+        }
+
+        .btn-tertiary {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+        }
+
+        .btn-tertiary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(111, 66, 193, 0.4);
+        }
+
+        .hero-visual {
+            flex: 1;
+            position: relative;
+            height: 500px;
+            animation: fadeIn 1.5s ease;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: rgba(13, 202, 240, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(13, 202, 240, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .floating-element:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .element-1 {
+            width: 180px;
+            height: 180px;
+            top: 0;
+            right: 0;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .element-2 {
+            width: 220px;
+            height: 150px;
+            bottom: 50px;
+            left: 0;
+            animation: float 7s ease-in-out infinite 1s;
+        }
+
+        .element-3 {
+            width: 160px;
+            height: 160px;
+            top: 150px;
+            left: 100px;
+            animation: float 5s ease-in-out infinite 0.5s;
+        }
+
+        .floating-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .availability-badge {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            background: linear-gradient(135deg, var(--success), #20c997);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        /* الأقسام العامة */
+        .section {
+            padding: 6rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            right: 50%;
+            transform: translateX(50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            border-radius: 2px;
+        }
+
+        .section-subtitle {
+            color: #aaa;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* قسم الخدمات */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .service-card {
+            background: var(--dark-light);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: var(--transition);
+            border: 1px solid var(--gray);
+            position: relative;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow);
+            border-color: var(--primary);
+        }
+
+        .service-icon {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--primary);
+            background: rgba(13, 202, 240, 0.05);
+            transition: var(--transition);
+        }
+
+        .service-card:hover .service-icon {
+            background: rgba(13, 202, 240, 0.1);
+        }
+
+        .service-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .service-title {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .service-desc {
+            color: #ccc;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .service-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .service-link:hover {
+            gap: 1rem;
+        }
+
+        /* قسم الحجز المتقدم */
+        .booking-advanced {
+            background: var(--dark-light);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-top: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .booking-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--gray);
+            padding-bottom: 1rem;
+        }
+
+        .booking-tab {
+            background: transparent;
+            border: none;
+            color: var(--light);
+            padding: 0.7rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .booking-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .booking-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #ddd;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            background: var(--dark);
+            border: 1px solid var(--gray);
+            border-radius: 10px;
+            color: var(--light);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.2);
+        }
+
+        .booking-summary {
+            background: var(--dark);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray);
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .booking-btn {
+            grid-column: 1 / -1;
+            margin-top: 1rem;
+        }
+
+        /* قسم لماذا تختارنا */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--dark-light);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid var(--gray);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(13, 202, 240, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 1.8rem;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+        .feature-card:hover .feature-icon {
+            background: rgba(13, 202, 240, 0.2);
+            transform: scale(1.1);
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-desc {
+            color: #ccc;
+        }
+
+        /* قسم الإحصائيات */
+        .stats {
+            background: linear-gradient(135deg, rgba(13, 202, 240, 0.1), rgba(30, 30, 30, 0.9)), url('https://images.unsplash.com/photo-1586773860418-d37222d8fce3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2073&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .stat-item {
+            background: rgba(18, 18, 18, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid rgba(13, 202, 240, 0.2);
+            transition: var(--transition);
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-text {
+            font-size: 1.1rem;
+            color: #ddd;
+        }
+
+        /* قسم آراء العملاء */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: var(--dark-light);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid var(--gray);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .testimonial-text {
+            margin-bottom: 1.5rem;
+            color: #ddd;
+            font-style: italic;
+            position: relative;
+            padding-right: 1.5rem;
+        }
+
+        .testimonial-text::before {
+            content: '"';
+            font-size: 4rem;
+            color: var(--primary);
+            position: absolute;
+            top: -1rem;
+            right: -0.5rem;
+            opacity: 0.3;
+            font-family: Georgia, serif;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+
+        .author-info h4 {
+            margin-bottom: 0.2rem;
+        }
+
+        .author-info p {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        /* قسم الأسئلة الشائعة */
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: var(--dark-light);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            border: 1px solid var(--gray);
+            transition: var(--transition);
+        }
+
+        .faq-item:hover {
+            border-color: var(--primary);
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            transition: var(--transition);
+        }
+
+        .faq-question:hover {
+            color: var(--primary);
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: var(--transition);
+            color: #ccc;
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 0 1.5rem 1.5rem;
+            max-height: 500px;
+        }
+
+        .faq-item.active .faq-question {
+            color: var(--primary);
+        }
+
+        .faq-toggle {
+            transition: var(--transition);
+        }
+
+        .faq-item.active .faq-toggle {
+            transform: rotate(180deg);
+        }
+
+        /* قسم الانضمام للفريق */
+        .join-team {
+            background: var(--dark-light);
+            border-radius: 20px;
+            padding: 4rem;
+            text-align: center;
+        }
+
+        .join-team .section-title {
+            margin-bottom: 1rem;
+        }
+
+        .join-team p {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            color: #ccc;
+        }
+
+        /* صفحة الفريق */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .team-card {
+            background: var(--dark-light);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: var(--transition);
+            border: 1px solid var(--gray);
+            text-align: center;
+        }
+
+        .team-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .team-img {
+            height: 250px;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 5rem;
+        }
+
+        .team-content {
+            padding: 1.5rem;
+        }
+
+        .team-name {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .team-role {
+            color: #aaa;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .team-desc {
+            color: #ccc;
+            margin-bottom: 1.5rem;
+        }
+
+        /* صفحة المدونة */
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .blog-card {
+            background: var(--dark-light);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: var(--transition);
+            border: 1px solid var(--gray);
+        }
+
+        .blog-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .blog-img {
+            height: 200px;
+            background: var(--gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 3rem;
+        }
+
+        .blog-content {
+            padding: 1.5rem;
+        }
+
+        .blog-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .blog-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .blog-excerpt {
+            color: #ccc;
+            margin-bottom: 1.5rem;
+        }
+
+        .blog-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .blog-link:hover {
+            gap: 1rem;
+        }
+
+        /* صفحة العروض المتقدمة */
+        .offers-advanced {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .offer-card {
+            background: var(--dark-light);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: var(--transition);
+            border: 1px solid var(--gray);
+            position: relative;
+        }
+
+        .offer-card.featured {
+            border: 2px solid var(--primary);
+            transform: scale(1.05);
+        }
+
+        .offer-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .offer-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: linear-gradient(135deg, var(--warning), #fd7e14);
+            color: var(--dark);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .offer-header {
+            padding: 2rem 1.5rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--gray);
+        }
+
+        .offer-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .offer-price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .offer-period {
+            color: #aaa;
+        }
+
+        .offer-features {
+            padding: 1.5rem;
+            list-style: none;
+        }
+
+        .offer-features li {
+            padding: 0.7rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .offer-features li:last-child {
+            border-bottom: none;
+        }
+
+        .offer-features li i {
+            color: var(--primary);
+        }
+
+        .offer-cta {
+            padding: 0 1.5rem 1.5rem;
+            text-align: center;
+        }
+
+        /* صفحة اتصل بنا */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+        }
+
+        .contact-info {
+            background: var(--dark-light);
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .contact-methods {
+            list-style: none;
+            margin-top: 2rem;
+        }
+
+        .contact-methods li {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--gray);
+        }
+
+        .contact-methods li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .contact-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(13, 202, 240, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .contact-details h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .contact-details p {
+            color: #ccc;
+        }
+
+        .contact-form-container {
+            background: var(--dark-light);
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .contact-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-form textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* خريطة لبنان */
+        .lebanon-map-section {
+            padding: 4rem 2rem;
+            background: var(--dark-light);
+            border-radius: 20px;
+            margin: 3rem auto;
+            max-width: 1400px;
+        }
+
+        .map-container {
+            height: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        #lebanon-map,
+        #detailed-lebanon-map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .map-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .map-title {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .map-legend {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .legend-primary {
+            background-color: var(--primary);
+        }
+
+        .legend-secondary {
+            background-color: var(--secondary);
+        }
+
+        .map-cities {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .city-card {
+            background: var(--dark);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid var(--gray);
+        }
+
+        .city-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .city-name {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .city-status {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .city-status.available {
+            color: var(--success);
+        }
+
+        /* قسم الشركاء */
+        .partners-section {
+            padding: 4rem 2rem;
+            background: var(--dark-light);
+            border-radius: 20px;
+            margin: 3rem auto;
+            max-width: 1400px;
+        }
+
+        .partners-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .partner-card {
+            background: var(--dark);
+            border-radius: 10px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            border: 1px solid var(--gray);
+        }
+
+        .partner-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .partner-logo {
+            color: var(--primary);
+            font-size: 2.5rem;
+        }
+
+        /* قسم الشهادات والاعتمادات */
+        .certifications-section {
+            padding: 4rem 2rem;
+            background: var(--dark-light);
+            border-radius: 20px;
+            margin: 3rem auto;
+            max-width: 1400px;
+        }
+
+        .certifications-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .certification-card {
+            background: var(--dark);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid var(--gray);
+        }
+
+        .certification-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .certification-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .certification-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .certification-desc {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        /* التذييل */
+        footer {
+            background: var(--dark-light);
+            padding: 4rem 2rem 2rem;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+        }
+
+        .footer-col h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .footer-col h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50px;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links a {
+            color: #ccc;
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+            gap: 1rem;
+        }
+
+        .contact-info {
+            list-style: none;
+        }
+
+        .contact-info li {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+        }
+
+        .contact-info i {
+            color: var(--primary);
+            margin-top: 0.2rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light);
+            transition: var(--transition);
+        }
+
+        .social-link:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 3rem auto 0;
+            padding-top: 2rem;
+            border-top: 1px solid var(--gray);
+            text-align: center;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        /* ويدجت الواتساب */
+        .whatsapp-widget {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            z-index: 100;
+        }
+
+        .whatsapp-btn {
+            width: 60px;
+            height: 60px;
+            background: #25d366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+            transition: var(--transition);
+            animation: pulse-green 2s infinite;
+        }
+
+        .whatsapp-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(37, 211, 102, 0.6);
+        }
+
+        /* مؤشر التحميل */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader-content {
+            text-align: center;
+        }
+
+        .loader-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(13, 202, 240, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .loader-text {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        /* الرسوم المتحركة */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(13, 202, 240, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(13, 202, 240, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(13, 202, 240, 0);
+            }
+        }
+
+        @keyframes pulse-green {
+            0% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(37, 211, 102, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* التجاوب مع الأجهزة المحمولة */
+        @media (max-width: 1200px) {
+            .hero-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-text h1 {
+                font-size: 2.8rem;
+            }
+
+            .hero-visual {
+                width: 100%;
+            }
+
+            .floating-element {
+                position: relative;
+                margin: 1rem auto;
+            }
+
+            .element-1,
+            .element-2,
+            .element-3 {
+                position: relative;
+                top: auto;
+                right: auto;
+                bottom: auto;
+                left: auto;
+                margin: 1rem auto;
+            }
+
+            nav ul {
+                display: none;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background: var(--dark-light);
+                width: 100%;
+                flex-direction: column;
+                padding: 1rem 0;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            }
+
+            nav ul.active {
+                display: flex;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .header-actions .call-btn span {
+                display: none;
+            }
+
+            .offer-card.featured {
+                transform: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .section {
+                padding: 4rem 1rem;
+            }
+
+            .hero-text h1 {
+                font-size: 2.2rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .booking-advanced,
+            .join-team,
+            .contact-info,
+            .contact-form-container {
+                padding: 2rem;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+            }
+
+            .map-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .lebanon-map-section,
+            .partners-section,
+            .certifications-section {
+                padding: 2rem 1rem;
+            }
+        }
+
+        /* تخصيصات للغة الإنجليزية */
+        body[dir="ltr"] .section-title::after {
+            right: auto;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        body[dir="ltr"] .footer-col h3::after {
+            right: auto;
+            left: 0;
+        }
+
+        body[dir="ltr"] nav a::after {
+            right: auto;
+            left: 0;
+        }
+
+        body[dir="ltr"] .service-link,
+        body[dir="ltr"] .blog-link,
+        body[dir="ltr"] .footer-links a {
+            flex-direction: row-reverse;
+        }
+
+        body[dir="ltr"] .testimonial-text::before {
+            right: auto;
+            left: -0.5rem;
+        }
+
+        body[dir="ltr"] .availability-badge {
+            right: 2rem;
+            left: auto;
+        }
+
+        body[dir="ltr"] .offer-badge {
+            right: 1rem;
+            left: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- مؤشر التحميل -->
+    <div class="loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Ojunditeam Consulting</div>
+        </div>
+    </div>
+
+    <!-- الشريط العلوي -->
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-stethoscope"></i>
+                </div>
+                <div class="logo-text">Ojunditeam Consulting</div>
+            </div>
+
+            <nav>
+                <ul>
+                    <li><a href="#" data-page="home">الرئيسية</a></li>
+                    <li><a href="#" data-page="services">الخدمات</a></li>
+                    <li><a href="#" data-page="booking">الحجز</a></li>
+                    <li><a href="#" data-page="team">فريقنا</a></li>
+                    <li><a href="#" data-page="offers">العروض</a></li>
+                    <li><a href="#" data-page="blog">المدونة</a></li>
+                    <li><a href="#" data-page="lebanon-map">خريطة لبنان</a></li>
+                    <li><a href="#" data-page="contact">اتصل بنا</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <div class="language-switcher">
+                    <button class="lang-btn active" data-lang="ar">العربية</button>
+                    <button class="lang-btn" data-lang="en">English</button>
+                </div>
+                <button class="call-btn" onclick="window.location.href='tel:+96181216174'">
+                    <i class="fas fa-phone"></i>
+                    <span>اتصل الآن</span>
+                </button>
+                <div class="mobile-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- الصفحات -->
+    <main>
+        <!-- الصفحة الرئيسية -->
+        <section id="home" class="page active">
+            <div class="hero">
+                <div class="availability-badge">
+                    <i class="fas fa-clock"></i>
+                    <span>متاحون 24/7 في جميع أنحاء لبنان</span>
+                </div>
+
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>رعاية تمريضية <span>منزلية</span> متكاملة باحترافية عالية</h1>
+                        <p>نقدم خدمات تمريضية منزلية شاملة مع فريق مؤهل من الممرضين والممرضات. رعاية مخصصة، خصوصية تامة،
+                            وخدمة فورية متاحة على مدار الساعة في جميع مناطق لبنان.</p>
+                        <div class="hero-btns">
+                            <a href="#" data-page="booking" class="btn btn-primary">احجز خدمة الآن</a>
+                            <a href="#" data-page="services" class="btn btn-secondary">استكشف خدماتنا</a>
+                            <a href="#" data-page="lebanon-map" class="btn btn-tertiary">خريطة الخدمات في لبنان</a>
+                        </div>
+                    </div>
+
+                    <div class="hero-visual">
+                        <div class="floating-element element-1">
+                            <div class="floating-icon">
+                                <i class="fas fa-user-nurse"></i>
+                            </div>
+                            <h3>ممرضون مؤهلون</h3>
+                            <p>ذكور وإناث</p>
+                        </div>
+
+                        <div class="floating-element element-2">
+                            <div class="floating-icon">
+                                <i class="fas fa-syringe"></i>
+                            </div>
+                            <h3>حقن وريدية</h3>
+                            <p>بأعلى معايير السلامة</p>
+                        </div>
+
+                        <div class="floating-element element-3">
+                            <div class="floating-icon">
+                                <i class="fas fa-hand-holding-heart"></i>
+                            </div>
+                            <h3>رعاية المسنين</h3>
+                            <p>رعاية شاملة ومتعاطفة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قسم الخدمات المصغرة في الصفحة الرئيسية -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">خدماتنا المتخصصة</h2>
+                    <p class="section-subtitle">نقدم مجموعة شاملة من خدمات التمريض المنزلي بأعلى معايير الجودة
+                        والاحترافية</p>
+                </div>
+
+                <div class="services-grid">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-user-nurse"></i>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">ممرضون وممرضات في المنزل</h3>
+                            <p class="service-desc">نوفر ممرضين وممرضات مؤهلين لتقديم الرعاية التمريضية المتخصصة في
+                                منزلك.</p>
+                            <a href="#" data-page="services" class="service-link">
+                                <span>المزيد من التفاصيل</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">محاليل وريدية</h3>
+                            <p class="service-desc">إعطاء المحاليل الوريدية المختلفة (IV Drip) بأعلى معايير السلامة
+                                والنظافة.</p>
+                            <a href="#" data-page="services" class="service-link">
+                                <span>المزيد من التفاصيل</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-stethoscope"></i>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">رعاية المسنين</h3>
+                            <p class="service-desc">تقديم رعاية شاملة للمسنين تشمل المساعدة في الأنشطة اليومية والرعاية
+                                الصحية.</p>
+                            <a href="#" data-page="services" class="service-link">
+                                <span>المزيد من التفاصيل</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center" style="margin-top: 3rem;">
+                    <a href="#" data-page="services" class="btn btn-primary">عرض جميع الخدمات</a>
+                </div>
+            </section>
+
+            <!-- قسم لماذا تختارنا في الصفحة الرئيسية -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">لماذا تختار Ojunditeam Consulting؟</h2>
+                    <p class="section-subtitle">نتميز بمجموعة من المزايا التي تجعلنا الخيار الأمثل لرعايتك الصحية
+                        المنزلية</p>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3 class="feature-title">السلامة أولاً</h3>
+                        <p class="feature-desc">نلتزم بأعلى معايير السلامة والنظافة في جميع خدماتنا لضمان رعاية آمنة
+                            وفعالة.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <h3 class="feature-title">احترافية عالية</h3>
+                        <p class="feature-desc">فريقنا من الممرضين المؤهلين والمتدربين على أعلى مستوى لتقديم رعاية
+                            متميزة.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h3 class="feature-title">ممرضون معتمدون</h3>
+                        <p class="feature-desc">جميع ممرضينا حاصلون على شهادات معتمدة وخبرات واسعة في مجال التمريض.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- قسم الإحصائيات في الصفحة الرئيسية -->
+            <section class="stats">
+                <div class="section-header">
+                    <h2 class="section-title">أرقامنا تتحدث عنا</h2>
+                    <p class="section-subtitle">إنجازاتنا وثقة عملائنا هي دليل نجاحنا وتميزنا في مجال الرعاية التمريضية
+                        المنزلية</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="1500">0</div>
+                        <div class="stat-text">مريض راضٍ عن خدماتنا</div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="5">0</div>
+                        <div class="stat-text">سنوات من الخبرة</div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="50">0</div>
+                        <div class="stat-text">ممرض وممرضة مؤهلين</div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="30">0</div>
+                        <div class="stat-text">دقيقة متوسط وقت الاستجابة</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- قسم خريطة لبنان في الصفحة الرئيسية -->
+            <section class="lebanon-map-section">
+                <div class="map-info">
+                    <h2 class="map-title">خريطة خدماتنا في لبنان</h2>
+                    <div class="map-legend">
+                        <div class="legend-item">
+                            <div class="legend-color legend-primary"></div>
+                            <span>خدمات متوفرة</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-secondary"></div>
+                            <span>خدمات قريباً</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="map-container">
+                    <div id="lebanon-map"></div>
+                </div>
+
+                <div class="map-cities">
+                    <div class="city-card">
+                        <div class="city-name">بيروت</div>
+                        <div class="city-status available">خدمات متوفرة</div>
+                    </div>
+                    <div class="city-card">
+                        <div class="city-name">طرابلس</div>
+                        <div class="city-status available">خدمات متوفرة</div>
+                    </div>
+                    <div class="city-card">
+                        <div class="city-name">صيدا</div>
+                        <div class="city-status available">خدمات متوفرة</div>
+                    </div>
+                    <div class="city-card">
+                        <div class="city-name">صور</div>
+                        <div class="city-status available">خدمات متوفرة</div>
+                    </div>
+                    <div class="city-card">
+                        <div class="city-name">زحلة</div>
+                        <div class="city-status available">خدمات متوفرة</div>
+                    </div>
+                    <div class="city-card">
+                        <div class="city-name">جبيل</div>
+                        <div class="city-status">خدمات قريباً</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- قسم الشركاء -->
+            <section class="partners-section">
+                <div class="section-header">
+                    <h2 class="section-title">شركاؤنا</h2>
+                    <p class="section-subtitle">نعمل مع أفضل المؤسسات والجهات الطبية في لبنان</p>
+                </div>
+
+                <div class="partners-grid">
+                    <div class="partner-card">
+                        <div class="partner-logo">
+                            <i class="fas fa-hospital"></i>
+                        </div>
+                    </div>
+                    <div class="partner-card">
+                        <div class="partner-logo">
+                            <i class="fas fa-clinic-medical"></i>
+                        </div>
+                    </div>
+                    <div class="partner-card">
+                        <div class="partner-logo">
+                            <i class="fas fa-ambulance"></i>
+                        </div>
+                    </div>
+                    <div class="partner-card">
+                        <div class="partner-logo">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                    </div>
+                    <div class="partner-card">
+                        <div class="partner-logo">
+                            <i class="fas fa-pills"></i>
+                        </div>
+                    </div>
+                    <div class="partner-card">
+                        <div class="partner-logo">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <!-- صفحة الخدمات -->
+        <section id="services" class="page">
+            <div class="section" style="padding-top: 8rem;">
+                <div class="section-header">
+                    <h2 class="section-title">خدماتنا المتخصصة</h2>
+                    <p class="section-subtitle">نقدم مجموعة شاملة من خدمات التمريض المنزلي بأعلى معايير الجودة
+                        والاحترافية</p>
+                </div>
+
+                <div class="services-grid">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-user-nurse"></i>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">ممرضون وممرضات في المنزل</h3>
+                            <p class="service-desc">نوفر ممرضين وممرضات مؤهلين لتقديم الرعاية التمريضية المتخصصة في
+                                منزلك، مع مراعاة الخصوصية والراحة التامة.</p>
+                            <div class="service-pricing">
+                                <p><strong>سعر الخدمة:</strong> 50,000 ل.ل للزيارة</p>
+                                <p><strong>الباقة الشهرية:</strong> 400,000 ل.ل (10 زيارات)</p>
+                            </div>
+                            <a href="#" data-page="booking" class="service-link">
+                                <span>احجز الآن</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">محاليل وريدية</h3>
+                            <p class="service-desc">إعطاء المحاليل الوريدية المختلفة (IV Drip) بأعلى معايير السلامة
+                                والنظافة لتلبية احتياجاتك العلاجية.</p>
+                            <div class="service-pricing">
+                                <p><strong>سعر الخدمة:</strong> 75,000 ل.ل للزيارة</p>
+                                <p><strong>الباقة الشهرية:</strong> 600,000 ل.ل (10 زيارات)</p>
+                            </div>
+                            <a href="#" data-page="booking" class="service-link">
+                                <span>احجز الآن</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-stethoscope"></i>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">تركيب كانيولا</h3>
+                            <p class="service-desc">تركيب الكانيولا (القسطرة الوريدية) بشكل احترافي وآمن لتسهيل إعطاء
+                                الأدوية والمحاليل الوريدية.</p>
+                            <div class="service-pricing">
+                                <p><strong>سعر الخدمة:</strong> 40,000 ل.ل للزيارة</p>
+                            </div>
+                            <a href="#" data-page="booking" class="service-link">
+                                <span>احجز الآن</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-wheelchair"></i>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">رعاية المسنين</h3>
+                            <p class="service-desc">تقديم رعاية شاملة للمسنين تشمل المساعدة في الأنشطة اليومية، إعطاء
+                                الأدوية، والرعاية الصحية المتخصصة.</p>
+                            <div class="service-pricing">
+                                <p><strong>سعر الخدمة:</strong> 60,000 ل.ل للزيارة</p>
+                                <p><strong>الباقة الشهرية:</strong> 500,000 ل.ل (10 زيارات)</p>
+                                <p><strong>الرعاية اليومية:</strong> 1,200,000 ل.ل شهرياً</p>
+                            </div>
+                            <a href="#" data-page="booking" class="service-link">
+                                <span>احجز الآن</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-band-aid"></i>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">تغيير الضمادات</h3>
+                            <p class="service-desc">تغيير ضمادات الجروح والعناية بها وفق أحدث البروتوكولات الطبية لضمان
+                                الشفاء السريع وتجنب العدوى.</p>
+                            <div class="service-pricing">
+                                <p><strong>سعر الخدمة:</strong> 35,000 ل.ل للزيارة</p>
+                                <p><strong>الباقة الشهرية:</strong> 280,000 ل.ل (10 زيارات)</p>
+                            </div>
+                            <a href="#" data-page="booking" class="service-link">
+                                <span>احجز الآن</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-cut"></i>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">إزالة الغرز</h3>
+                            <p class="service-desc">إزالة غرز الجروح الجراحية بشكل آمن ومعقم بعد انتهاء فترة التعافي
+                                المطلوبة.</p>
+                            <div class="service-pricing">
+                                <p><strong>سعر الخدمة:</strong> 30,000 ل.ل للزيارة</p>
+                            </div>
+                            <a href="#" data-page="booking" class="service-link">
+                                <span>احجز الآن</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-syringe"></i>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">الحقن بأنواعها</h3>
+                            <p class="service-desc">إعطاء الحقن العضلية، الوريدية، وتحت الجلدية وفق البروتوكولات الطبية
+                                المعتمدة وبأعلى معايير السلامة.</p>
+                            <div class="service-pricing">
+                                <p><strong>سعر الخدمة:</strong> 25,000 ل.ل للزيارة</p>
+                                <p><strong>الباقة الشهرية:</strong> 200,000 ل.ل (10 زيارات)</p>
+                            </div>
+                            <a href="#" data-page="booking" class="service-link">
+                                <span>احجز الآن</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">خدمات تمريضية إضافية</h3>
+                            <p class="service-desc">نقدم مجموعة واسعة من الخدمات التمريضية الأخرى مثل العناية بالأمراض
+                                المزمنة، الرعاية بعد العمليات، والمزيد.</p>
+                            <div class="service-pricing">
+                                <p><strong>سعر الخدمة:</strong> يبدأ من 40,000 ل.ل</p>
+                                <p><strong>حسب نوع الخدمة المطلوبة</strong></p>
+                            </div>
+                            <a href="#" data-page="booking" class="service-link">
+                                <span>احجز الآن</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- صفحة الحجز المتقدم -->
+        <section id="booking" class="page">
+            <div class="section" style="padding-top: 8rem;">
+                <div class="section-header">
+                    <h2 class="section-title">احجز خدمتك الآن</h2>
+                    <p class="section-subtitle">اختر الخدمة المطلوبة واملأ النموذج أدناه وسنتصل بك في أقرب وقت لتأكيد
+                        الحجز</p>
+                </div>
+
+                <div class="booking-advanced">
+                    <div class="booking-tabs">
+                        <button class="booking-tab active" data-tab="one-time">حجز لمرة واحدة</button>
+                        <button class="booking-tab" data-tab="daily">رعاية يومية</button>
+                        <button class="booking-tab" data-tab="monthly">باقة شهرية</button>
+                    </div>
+
+                    <form class="booking-form" id="booking-form">
+                        <div class="form-group">
+                            <label class="form-label" for="service-type">نوع الخدمة</label>
+                            <select id="service-type" class="form-control" required>
+                                <option value="">اختر الخدمة المطلوبة</option>
+                                <option value="nurse" data-price="50000">ممرض/ممرضة في المنزل - 50,000 ل.ل</option>
+                                <option value="iv" data-price="75000">محاليل وريدية - 75,000 ل.ل</option>
+                                <option value="cannula" data-price="40000">تركيب كانيولا - 40,000 ل.ل</option>
+                                <option value="elderly" data-price="60000">رعاية المسنين - 60,000 ل.ل</option>
+                                <option value="dressing" data-price="35000">تغيير الضمادات - 35,000 ل.ل</option>
+                                <option value="suture" data-price="30000">إزالة الغرز - 30,000 ل.ل</option>
+                                <option value="injection" data-price="25000">الحقن بأنواعها - 25,000 ل.ل</option>
+                                <option value="other" data-price="40000">خدمات أخرى - 40,000 ل.ل</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="booking-type">نوع الحجز</label>
+                            <select id="booking-type" class="form-control" required>
+                                <option value="one-time">مرة واحدة</option>
+                                <option value="daily">يومي</option>
+                                <option value="weekly">أسبوعي</option>
+                                <option value="monthly">شهري</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="duration">المدة (أيام)</label>
+                            <input type="number" id="duration" class="form-control" min="1" value="1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="name">الاسم الكامل</label>
+                            <input type="text" id="name" class="form-control" placeholder="أدخل اسمك الكامل" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="phone">رقم الهاتف</label>
+                            <input type="tel" id="phone" class="form-control" placeholder="أدخل رقم هاتفك" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="date">التاريخ المفضل</label>
+                            <input type="date" id="date" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="time">الوقت المفضل</label>
+                            <input type="time" id="time" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="gender">تفضيل جنس الممرض</label>
+                            <select id="gender" class="form-control">
+                                <option value="">لا يهم</option>
+                                <option value="male">ممرض</option>
+                                <option value="female">ممرضة</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="address">العنوان</label>
+                            <input type="text" id="address" class="form-control" placeholder="أدخل عنوانك بالتفصيل"
+                                required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="notes">ملاحظات إضافية</label>
+                            <textarea id="notes" class="form-control" rows="3"
+                                placeholder="أي معلومات إضافية أو متطلبات خاصة"></textarea>
+                        </div>
+
+                        <div class="booking-summary">
+                            <h3>ملخص الحجز</h3>
+                            <div class="summary-item">
+                                <span>سعر الخدمة:</span>
+                                <span id="service-price">0 ل.ل</span>
+                            </div>
+                            <div class="summary-item">
+                                <span>المدة:</span>
+                                <span id="duration-display">1 يوم</span>
+                            </div>
+                            <div class="summary-item">
+                                <span>نوع الحجز:</span>
+                                <span id="booking-type-display">مرة واحدة</span>
+                            </div>
+                            <div class="summary-total">
+                                <span>المجموع:</span>
+                                <span id="total-price">0 ل.ل</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary booking-btn">تأكيد الحجز والدفع</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- صفحة الفريق -->
+        <section id="team" class="page">
+            <div class="section" style="padding-top: 8rem;">
+                <div class="section-header">
+                    <h2 class="section-title">فريقنا المحترف</h2>
+                    <p class="section-subtitle">نفخر بفريقنا من الممرضين والممرضات المؤهلين ذوي الخبرات الواسعة في مجال
+                        الرعاية التمريضية المنزلية</p>
+                </div>
+
+                <div class="team-grid">
+                    <div class="team-card">
+                        <div class="team-img">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div class="team-content">
+                            <h3 class="team-name">د. أحمد محمد</h3>
+                            <p class="team-role">استشاري التمريض المنزلي</p>
+                            <p class="team-desc">خبرة تزيد عن 15 عامًا في مجال التمريض والرعاية الصحية المنزلية، متخصص
+                                في رعاية المسنين والمرضى المزمنين.</p>
+                        </div>
+                    </div>
+
+                    <div class="team-card">
+                        <div class="team-img">
+                            <i class="fas fa-user-nurse"></i>
+                        </div>
+                        <div class="team-content">
+                            <h3 class="team-name">ممرضة سارة الخالد</h3>
+                            <p class="team-role">ممرضة متخصصة في الرعاية المنزلية</p>
+                            <p class="team-desc">ممرضة معتمدة بخبرة 8 سنوات، متخصصة في العناية بالجروح، إعطاء المحاليل
+                                الوريدية، ورعاية ما بعد العمليات.</p>
+                        </div>
+                    </div>
+
+                    <div class="team-card">
+                        <div class="team-img">
+                            <i class="fas fa-user-injured"></i>
+                        </div>
+                        <div class="team-content">
+                            <h3 class="team-name">ممرض خالد عبدالله</h3>
+                            <p class="team-role">ممرض متخصص في الطوارئ</p>
+                            <p class="team-desc">خبرة 10 سنوات في التمريض الطارئ والعناية المركزة، متخصص في التعامل مع
+                                الحالات الحرجة وتقديم الرعاية الفورية.</p>
+                        </div>
+                    </div>
+
+                    <div class="team-card">
+                        <div class="team-img">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="team-content">
+                            <h3 class="team-name">ممرضة فاطمة ناصر</h3>
+                            <p class="team-role">ممرضة أطفال ورعاية حديثي الولادة</p>
+                            <p class="team-desc">متخصصة في رعاية الأطفال وحديثي الولادة بخبرة 6 سنوات، تقدم رعاية شاملة
+                                ومتعاطفة للأطفال في منازلهم.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="join-team" style="margin-top: 4rem;">
+                    <h3 class="section-title">انضم إلى فريقنا</h3>
+                    <p>إذا كنت ممرضًا أو ممرضة مؤهلين وتبحث عن فرصة عمل مرنة في بيئة محترفة، نحن نود سماع منك. انضم إلى
+                        فريقنا واستمتع بمزايا تنافسية وفرص نمو مهني.</p>
+                    <a href="#" data-page="contact" class="btn btn-primary">قدم طلبك الآن</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- صفحة العروض المتقدمة -->
+        <section id="offers" class="page">
+            <div class="section" style="padding-top: 8rem;">
+                <div class="section-header">
+                    <h2 class="section-title">عروضنا وبرامجنا</h2>
+                    <p class="section-subtitle">نقدم مجموعة من البرامج والعروض المميزة لتلبية احتياجاتك المختلفة بأسعار
+                        تنافسية</p>
+                </div>
+
+                <div class="offers-advanced">
+                    <div class="offer-card">
+                        <div class="offer-header">
+                            <h3 class="offer-title">الباقة الأساسية</h3>
+                            <div class="offer-price">50,000 <span style="font-size: 1rem;">ل.ل</span></div>
+                            <div class="offer-period">لـ 5 زيارات</div>
+                        </div>
+                        <ul class="offer-features">
+                            <li><i class="fas fa-check"></i> زيارة تمريضية واحدة</li>
+                            <li><i class="fas fa-check"></i> فحص العلامات الحيوية</li>
+                            <li><i class="fas fa-check"></i> إعطاء الدواء</li>
+                            <li><i class="fas fa-times"></i> العناية بالجروح</li>
+                            <li><i class="fas fa-times"></i> المحاليل الوريدية</li>
+                        </ul>
+                        <div class="offer-cta">
+                            <a href="#" data-page="booking" class="btn btn-primary">احجز الآن</a>
+                        </div>
+                    </div>
+
+                    <div class="offer-card featured">
+                        <div class="offer-badge">الأكثر طلباً</div>
+                        <div class="offer-header">
+                            <h3 class="offer-title">الباقة المتكاملة</h3>
+                            <div class="offer-price">120,000 <span style="font-size: 1rem;">ل.ل</span></div>
+                            <div class="offer-period">لـ 12 زيارة</div>
+                        </div>
+                        <ul class="offer-features">
+                            <li><i class="fas fa-check"></i> جميع خدمات الباقة الأساسية</li>
+                            <li><i class="fas fa-check"></i> العناية بالجروح وتغيير الضمادات</li>
+                            <li><i class="fas fa-check"></i> المحاليل الوريدية البسيطة</li>
+                            <li><i class="fas fa-check"></i> تركيب الكانيولا</li>
+                            <li><i class="fas fa-check"></i> استشارة تمريضية هاتفية</li>
+                        </ul>
+                        <div class="offer-cta">
+                            <a href="#" data-page="booking" class="btn btn-primary">احجز الآن</a>
+                        </div>
+                    </div>
+
+                    <div class="offer-card">
+                        <div class="offer-header">
+                            <h3 class="offer-title">باقة الرعاية الشاملة</h3>
+                            <div class="offer-price">250,000 <span style="font-size: 1rem;">ل.ل</span></div>
+                            <div class="offer-period">رعاية شهرية</div>
+                        </div>
+                        <ul class="offer-features">
+                            <li><i class="fas fa-check"></i> جميع خدمات الباقة المتكاملة</li>
+                            <li><i class="fas fa-check"></i> رعاية المسنين المتكاملة</li>
+                            <li><i class="fas fa-check"></i> زيارات منزلية غير محدودة (حسب الجدول)</li>
+                            <li><i class="fas fa-check"></i> مراقبة مستمرة للحالة الصحية</li>
+                            <li><i class="fas fa-check"></i> استشارة طبية عن بعد</li>
+                        </ul>
+                        <div class="offer-cta">
+                            <a href="#" data-page="booking" class="btn btn-primary">احجز الآن</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" style="padding-top: 4rem;">
+                    <div class="section-header">
+                        <h2 class="section-title">عروض خاصة</h2>
+                        <p class="section-subtitle">استفد من عروضنا المحدودة بوقت لخدمات متميزة بأسعار خاصة</p>
+                    </div>
+
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <h3 class="feature-title">خصم 20% للكبار في السن</h3>
+                            <p class="feature-desc">نقدم خصمًا خاصًا لكبار السن فوق 65 عامًا على جميع خدماتنا طوال
+                                العام.</p>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                            <h3 class="feature-title">عروض العائلة</h3>
+                            <p class="feature-desc">احصل على خصم 15% عند حجز خدمات لأكثر من فرد من أفراد العائلة.</p>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <h3 class="feature-title">برنامج الرعاية الشهرية</h3>
+                            <p class="feature-desc">اشترك في برنامج الرعاية الشهرية ووفر حتى 30% من التكلفة الإجمالية.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- صفحة المدونة -->
+        <section id="blog" class="page">
+            <div class="section" style="padding-top: 8rem;">
+                <div class="section-header">
+                    <h2 class="section-title">مدونة الرعاية الصحية</h2>
+                    <p class="section-subtitle">أحدث المقالات والنصائح حول الرعاية الصحية المنزلية والعناية بالمرضى</p>
+                </div>
+
+                <div class="blog-grid">
+                    <div class="blog-card">
+                        <div class="blog-img">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-meta">
+                                <span><i class="far fa-calendar"></i> 15 مايو 2023</span>
+                                <span><i class="far fa-folder"></i> الرعاية المنزلية</span>
+                            </div>
+                            <h3 class="blog-title">نصائح للعناية بكبار السن في المنزل</h3>
+                            <p class="blog-excerpt">تعرف على أفضل الممارسات والنصائح لتوفير رعاية شاملة وكريمة لكبار
+                                السن في بيئة منزلية مريحة وآمنة.</p>
+                            <a href="#" class="blog-link">
+                                <span>قراءة المزيد</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="blog-card">
+                        <div class="blog-img">
+                            <i class="fas fa-band-aid"></i>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-meta">
+                                <span><i class="far fa-calendar"></i> 2 مايو 2023</span>
+                                <span><i class="far fa-folder"></i> العناية بالجروح</span>
+                            </div>
+                            <h3 class="blog-title">كيف تعتني بالجروح في المنزل بشكل صحيح</h3>
+                            <p class="blog-excerpt">دليل شامل للعناية بالجروح وتغيير الضمادات في المنزل لتسريع عملية
+                                الشفاء وتجنب المضاعفات.</p>
+                            <a href="#" class="blog-link">
+                                <span>قراءة المزيد</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="blog-card">
+                        <div class="blog-img">
+                            <i class="fas fa-syringe"></i>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-meta">
+                                <span><i class="far fa-calendar"></i> 20 أبريل 2023</span>
+                                <span><i class="far fa-folder"></i> الإجراءات التمريضية</span>
+                            </div>
+                            <h3 class="blog-title">المحاليل الوريدية: متى وكيف ولماذا؟</h3>
+                            <p class="blog-excerpt">كل ما تحتاج معرفته عن المحاليل الوريدية، أنواعها، استخداماتها،
+                                وكيفية إعطائها بأمان في المنزل.</p>
+                            <a href="#" class="blog-link">
+                                <span>قراءة المزيد</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center" style="margin-top: 3rem;">
+                    <a href="#" class="btn btn-primary">عرض جميع المقالات</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- صفحة خريطة لبنان الموسعة -->
+        <section id="lebanon-map" class="page">
+            <div class="section" style="padding-top: 8rem;">
+                <div class="section-header">
+                    <h2 class="section-title">خدماتنا في جميع أنحاء لبنان</h2>
+                    <p class="section-subtitle">نغطي معظم المناطق اللبنانية بخدمات التمريض المنزلي المتخصصة</p>
+                </div>
+
+                <div class="lebanon-map-section">
+                    <div class="map-info">
+                        <h2 class="map-title">خريطة التغطية الكاملة في لبنان</h2>
+                        <div class="map-legend">
+                            <div class="legend-item">
+                                <div class="legend-color legend-primary"></div>
+                                <span>خدمات متوفرة حالياً</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color legend-secondary"></div>
+                                <span>خدمات قريباً</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="map-container">
+                        <div id="detailed-lebanon-map"></div>
+                    </div>
+
+                    <div class="section" style="padding-top: 4rem;">
+                        <div class="section-header">
+                            <h2 class="section-title">مناطق الخدمة</h2>
+                            <p class="section-subtitle">نقدم خدماتنا في المدن والمناطق التالية</p>
+                        </div>
+
+                        <div class="map-cities" style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));">
+                            <div class="city-card">
+                                <div class="city-name">بيروت</div>
+                                <div class="city-status available">خدمات متوفرة</div>
+                                <p>جميع مناطق العاصمة بيروت</p>
+                            </div>
+                            <div class="city-card">
+                                <div class="city-name">طرابلس</div>
+                                <div class="city-status available">خدمات متوفرة</div>
+                                <p>شمال لبنان وضواحي طرابلس</p>
+                            </div>
+                            <div class="city-card">
+                                <div class="city-name">صيدا</div>
+                                <div class="city-status available">خدمات متوفرة</div>
+                                <p>جنوب لبنان وضواحي صيدا</p>
+                            </div>
+                            <div class="city-card">
+                                <div class="city-name">صور</div>
+                                <div class="city-status available">خدمات متوفرة</div>
+                                <p>أقصى جنوب لبنان</p>
+                            </div>
+                            <div class="city-card">
+                                <div class="city-name">زحلة</div>
+                                <div class="city-status available">خدمات متوفرة</div>
+                                <p>البقاع وضواحي زحلة</p>
+                            </div>
+                            <div class="city-card">
+                                <div class="city-name">جبيل</div>
+                                <div class="city-status">خدمات قريباً</div>
+                                <p>منطقة جبيل وجوارها</p>
+                            </div>
+                            <div class="city-card">
+                                <div class="city-name">بعبدا</div>
+                                <div class="city-status available">خدمات متوفرة</div>
+                                <p>جبل لبنان وضواحي بعبدا</p>
+                            </div>
+                            <div class="city-card">
+                                <div class="city-name">النبطية</div>
+                                <div class="city-status">خدمات قريباً</div>
+                                <p>جنوب لبنان</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- صفحة اتصل بنا -->
+        <section id="contact" class="page">
+            <div class="section" style="padding-top: 8rem;">
+                <div class="section-header">
+                    <h2 class="section-title">اتصل بنا</h2>
+                    <p class="section-subtitle">نحن هنا للإجابة على استفساراتك وتقديم الدعم اللازم في أي وقت</p>
+                </div>
+
+                <div class="contact-grid">
+                    <div class="contact-info">
+                        <h3>معلومات التواصل</h3>
+                        <p>لا تتردد في التواصل معنا عبر أي من القنوات التالية، فريق الدعم لدينا متاح على مدار الساعة
+                            لمساعدتك.</p>
+
+                        <ul class="contact-methods">
+                            <li>
+                                <div class="contact-icon">
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                <div class="contact-details">
+                                    <h3>هاتف الطوارئ</h3>
+                                    <p>+961 81 216 174</p>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="contact-icon">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <div class="contact-details">
+                                    <h3>البريد الإلكتروني</h3>
+                                    <p>info@ojunditeam.com</p>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="contact-icon">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <div class="contact-details">
+                                    <h3>العنوان</h3>
+                                    <p>لبنان - بيروت</p>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="contact-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="contact-details">
+                                    <h3>ساعات العمل</h3>
+                                    <p>متاحون 24/7</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="contact-form-container">
+                        <h3>أرسل رسالة</h3>
+                        <form class="contact-form">
+                            <div class="form-group">
+                                <label class="form-label" for="contact-name">الاسم الكامل</label>
+                                <input type="text" id="contact-name" class="form-control" placeholder="أدخل اسمك الكامل"
+                                    required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="contact-email">البريد الإلكتروني</label>
+                                <input type="email" id="contact-email" class="form-control"
+                                    placeholder="أدخل بريدك الإلكتروني" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="contact-phone">رقم الهاتف</label>
+                                <input type="tel" id="contact-phone" class="form-control" placeholder="أدخل رقم هاتفك">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="contact-subject">الموضوع</label>
+                                <input type="text" id="contact-subject" class="form-control" placeholder="موضوع الرسالة"
+                                    required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="contact-message">الرسالة</label>
+                                <textarea id="contact-message" class="form-control" placeholder="اكتب رسالتك هنا..."
+                                    required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">إرسال الرسالة</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="lebanon-map-section" style="margin-top: 4rem;">
+                    <div class="map-info">
+                        <h2 class="map-title">موقعنا في لبنان</h2>
+                    </div>
+                    <div class="map-container">
+                        <div id="contact-map"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- التذييل -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-col">
+                <h3>Ojunditeam Consulting</h3>
+                <p>نقدم خدمات تمريضية منزلية متكاملة بأعلى معايير الجودة والاحترافية. فريقنا من الممرضين المؤهلين جاهزون
+                    لتقديم الرعاية التي تستحقها في منزلك.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h3>روابط سريعة</h3>
+                <ul class="footer-links">
+                    <li><a href="#" data-page="home"><i class="fas fa-arrow-left"></i> الرئيسية</a></li>
+                    <li><a href="#" data-page="services"><i class="fas fa-arrow-left"></i> خدماتنا</a></li>
+                    <li><a href="#" data-page="booking"><i class="fas fa-arrow-left"></i> احجز خدمة</a></li>
+                    <li><a href="#" data-page="team"><i class="fas fa-arrow-left"></i> فريقنا</a></li>
+                    <li><a href="#" data-page="lebanon-map"><i class="fas fa-arrow-left"></i> خريطة لبنان</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h3>خدماتنا</h3>
+                <ul class="footer-links">
+                    <li><a href="#" data-page="services"><i class="fas fa-arrow-left"></i> ممرضون في المنزل</a></li>
+                    <li><a href="#" data-page="services"><i class="fas fa-arrow-left"></i> محاليل وريدية</a></li>
+                    <li><a href="#" data-page="services"><i class="fas fa-arrow-left"></i> رعاية المسنين</a></li>
+                    <li><a href="#" data-page="services"><i class="fas fa-arrow-left"></i> تغيير الضمادات</a></li>
+                    <li><a href="#" data-page="services"><i class="fas fa-arrow-left"></i> إزالة الغرز</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h3>اتصل بنا</h3>
+                <ul class="contact-info">
+                    <li>
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <strong>هاتف الطوارئ</strong>
+                            <p>+961 81 216 174</p>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <strong>البريد الإلكتروني</strong>
+                            <p>info@ojunditeam.com</p>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <strong>العنوان</strong>
+                            <p>لبنان - بيروت</p>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <strong>ساعات العمل</strong>
+                            <p>متاحون 24/7</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>جميع الحقوق محفوظة &copy; 2023 Ojunditeam Consulting. تم التصميم والتطوير بدقة واحترافية.</p>
+        </div>
+    </footer>
+
+    <!-- ويدجت الواتساب -->
+    <div class="whatsapp-widget">
+        <a href="https://wa.me/96181216174" class="whatsapp-btn" target="_blank">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // بيانات الترجمة
+        const translations = {
+            ar: {
+                // الشريط العلوي
+                "home": "الرئيسية",
+                "services": "الخدمات",
+                "booking": "الحجز",
+                "team": "فريقنا",
+                "offers": "العروض",
+                "blog": "المدونة",
+                "lebanon-map": "خريطة لبنان",
+                "contact": "اتصل بنا",
+                "call-now": "اتصل الآن",
+
+                // الصفحة الرئيسية
+                "hero-title": "رعاية تمريضية <span>منزلية</span> متكاملة باحترافية عالية",
+                "hero-desc": "نقدم خدمات تمريضية منزلية شاملة مع فريق مؤهل من الممرضين والممرضات. رعاية مخصصة، خصوصية تامة، وخدمة فورية متاحة على مدار الساعة في جميع مناطق لبنان.",
+                "book-service": "احجز خدمة الآن",
+                "explore-services": "استكشف خدماتنا",
+                "lebanon-map-btn": "خريطة الخدمات في لبنان",
+                "available-24-7": "متاحون 24/7 في جميع أنحاء لبنان",
+
+                // يمكن إضافة المزيد من الترجمات هنا
+            },
+            en: {
+                // الشريط العلوي
+                "home": "Home",
+                "services": "Services",
+                "booking": "Booking",
+                "team": "Our Team",
+                "offers": "Offers",
+                "blog": "Blog",
+                "lebanon-map": "Lebanon Map",
+                "contact": "Contact Us",
+                "call-now": "Call Now",
+
+                // الصفحة الرئيسية
+                "hero-title": "Professional <span>Home Nursing</span> Care Services",
+                "hero-desc": "We provide comprehensive home nursing services with a qualified team of male and female nurses. Personalized care, complete privacy, and immediate service available 24/7 throughout Lebanon.",
+                "book-service": "Book a Service Now",
+                "explore-services": "Explore Our Services",
+                "lebanon-map-btn": "Service Map in Lebanon",
+                "available-24-7": "Available 24/7 Across Lebanon",
+
+                // يمكن إضافة المزيد من الترجمات هنا
+            }
+        };
+
+        // إخفاء مؤشر التحميل بعد تحميل الصفحة
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                document.querySelector('.loader').style.opacity = '0';
+                setTimeout(function () {
+                    document.querySelector('.loader').style.display = 'none';
+                }, 500);
+            }, 1000);
+
+            // تهيئة الخرائط بعد تحميل الصفحة
+            initLebanonMap();
+            initDetailedLebanonMap();
+            initContactMap();
+        });
+
+        // نظام التوجيه بين الصفحات
+        document.addEventListener('DOMContentLoaded', function () {
+            // إخفاء جميع الصفحات وإظهار الصفحة النشطة
+            function showPage(pageId) {
+                // إخفاء جميع الصفحات
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+
+                // إظهار الصفحة المطلوبة
+                document.getElementById(pageId).classList.add('active');
+
+                // تحديث عنوان URL
+                history.pushState(null, null, `#${pageId}`);
+
+                // التمرير إلى الأعلى
+                window.scrollTo(0, 0);
+            }
+
+            // التعامل مع نقرات القائمة
+            document.querySelectorAll('nav a, .service-link, .blog-link, .hero-btns a, .footer-links a, .offer-cta a').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const pageId = this.getAttribute('data-page') || this.getAttribute('href').substring(1);
+                    if (pageId) {
+                        showPage(pageId);
+
+                        // إغلاق القائمة المتنقلة إذا كانت مفتوحة
+                        if (window.innerWidth <= 1200) {
+                            document.querySelector('nav ul').classList.remove('active');
+                        }
+                    }
+                });
+            });
+
+            // التعامل مع زر القائمة المتنقلة
+            document.querySelector('.mobile-menu').addEventListener('click', function () {
+                document.querySelector('nav ul').classList.toggle('active');
+            });
+
+            // التعامل مع التغيير في عنوان URL
+            window.addEventListener('popstate', function () {
+                const pageId = window.location.hash.substring(1) || 'home';
+                showPage(pageId);
+            });
+
+            // تحميل الصفحة الصحيحة عند التحميل الأول
+            const initialPage = window.location.hash.substring(1) || 'home';
+            showPage(initialPage);
+
+            // تبديل اللغة
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const lang = this.getAttribute('data-lang');
+                    switchLanguage(lang);
+                });
+            });
+
+            // نظام الحجز المتقدم
+            setupBookingSystem();
+        });
+
+        // تبديل اللغة
+        function switchLanguage(lang) {
+            // تحديث أزرار اللغة
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-lang') === lang) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // تحديث اتجاه الصفحة
+            document.body.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+            document.documentElement.setAttribute('lang', lang);
+
+            // تطبيق الترجمات
+            applyTranslations(lang);
+        }
+
+        // تطبيق الترجمات
+        function applyTranslations(lang) {
+            const translation = translations[lang];
+
+            // تحديث عناصر القائمة
+            document.querySelectorAll('nav a').forEach(link => {
+                const key = link.getAttribute('data-page');
+                if (translation[key]) {
+                    link.textContent = translation[key];
+                }
+            });
+
+            // تحديث النص في الصفحة الرئيسية
+            const heroTitle = document.querySelector('.hero-text h1');
+            const heroDesc = document.querySelector('.hero-text p');
+            const bookServiceBtn = document.querySelector('.hero-btns a[data-page="booking"]');
+            const exploreServicesBtn = document.querySelector('.hero-btns a[data-page="services"]');
+            const lebanonMapBtn = document.querySelector('.hero-btns a[data-page="lebanon-map"]');
+            const availabilityBadge = document.querySelector('.availability-badge span');
+            const callNowBtn = document.querySelector('.call-btn span');
+
+            if (heroTitle && translation['hero-title']) {
+                heroTitle.innerHTML = translation['hero-title'];
+            }
+            if (heroDesc && translation['hero-desc']) {
+                heroDesc.textContent = translation['hero-desc'];
+            }
+            if (bookServiceBtn && translation['book-service']) {
+                bookServiceBtn.textContent = translation['book-service'];
+            }
+            if (exploreServicesBtn && translation['explore-services']) {
+                exploreServicesBtn.textContent = translation['explore-services'];
+            }
+            if (lebanonMapBtn && translation['lebanon-map-btn']) {
+                lebanonMapBtn.textContent = translation['lebanon-map-btn'];
+            }
+            if (availabilityBadge && translation['available-24-7']) {
+                availabilityBadge.textContent = translation['available-24-7'];
+            }
+            if (callNowBtn && translation['call-now']) {
+                callNowBtn.textContent = translation['call-now'];
+            }
+
+            // يمكن إضافة المزيد من العناصر للترجمة هنا
+        }
+
+        // تهيئة خريطة لبنان الأساسية
+        function initLebanonMap() {
+            const map = L.map('lebanon-map').setView([33.8547, 35.8623], 8);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // إضافة علامات للمدن الرئيسية
+            const cities = [
+                { name: "بيروت", coords: [33.8938, 35.5018], status: "available" },
+                { name: "طرابلس", coords: [34.4367, 35.8497], status: "available" },
+                { name: "صيدا", coords: [33.5631, 35.3689], status: "available" },
+                { name: "صور", coords: [33.2700, 35.2033], status: "available" },
+                { name: "زحلة", coords: [33.8497, 35.9042], status: "available" },
+                { name: "جبيل", coords: [34.1211, 35.6481], status: "coming" }
+            ];
+
+            cities.forEach(city => {
+                const color = city.status === "available" ? '#0dcaf0' : '#6f42c1';
+                const icon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>`,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+
+                const marker = L.marker(city.coords, { icon: icon }).addTo(map);
+                marker.bindPopup(`<b>${city.name}</b><br>${city.status === "available" ? "خدمات متوفرة" : "خدمات قريباً"}`);
+            });
+        }
+
+        // تهيئة خريطة لبنان التفصيلية
+        function initDetailedLebanonMap() {
+            const map = L.map('detailed-lebanon-map').setView([33.8547, 35.8623], 8);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // إضافة علامات للمدن الرئيسية
+            const cities = [
+                { name: "بيروت", coords: [33.8938, 35.5018], status: "available", details: "العاصمة ومركز الخدمات الرئيسي" },
+                { name: "طرابلس", coords: [34.4367, 35.8497], status: "available", details: "شمال لبنان وضواحي طرابلس" },
+                { name: "صيدا", coords: [33.5631, 35.3689], status: "available", details: "جنوب لبنان وضواحي صيدا" },
+                { name: "صور", coords: [33.2700, 35.2033], status: "available", details: "أقصى جنوب لبنان" },
+                { name: "زحلة", coords: [33.8497, 35.9042], status: "available", details: "البقاع وضواحي زحلة" },
+                { name: "جبيل", coords: [34.1211, 35.6481], status: "coming", details: "منطقة جبيل وجوارها" },
+                { name: "بعبدا", coords: [33.8333, 35.5333], status: "available", details: "جبل لبنان وضواحي بعبدا" },
+                { name: "النبطية", coords: [33.3781, 35.4828], status: "coming", details: "جنوب لبنان" }
+            ];
+
+            cities.forEach(city => {
+                const color = city.status === "available" ? '#0dcaf0' : '#6f42c1';
+                const icon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background-color: ${color}; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${city.name.charAt(0)}</div>`,
+                    iconSize: [25, 25],
+                    iconAnchor: [12, 12]
+                });
+
+                const marker = L.marker(city.coords, { icon: icon }).addTo(map);
+                marker.bindPopup(`
+                    <div style="text-align: right; min-width: 200px;">
+                        <h3 style="margin: 0 0 10px; color: #0dcaf0;">${city.name}</h3>
+                        <p style="margin: 0 0 10px;">${city.details}</p>
+                        <p style="margin: 0; color: ${city.status === "available" ? '#198754' : '#6f42c1'}; font-weight: bold;">
+                            ${city.status === "available" ? "خدمات متوفرة حالياً" : "خدمات قريباً"}
+                        </p>
+                    </div>
+                `);
+            });
+        }
+
+        // تهيئة خريطة الاتصال
+        function initContactMap() {
+            const map = L.map('contact-map').setView([33.8938, 35.5018], 12);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // إضافة علامة للموقع الرئيسي
+            const icon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color: #0dcaf0; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;"><i class="fas fa-map-marker-alt"></i></div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            const marker = L.marker([33.8938, 35.5018], { icon: icon }).addTo(map);
+            marker.bindPopup(`
+                <div style="text-align: right; min-width: 200px;">
+                    <h3 style="margin: 0 0 10px; color: #0dcaf0;">Ojunditeam Consulting</h3>
+                    <p style="margin: 0 0 10px;">بيروت، لبنان</p>
+                    <p style="margin: 0;">+961 81 216 174</p>
+                </div>
+            `);
+        }
+
+        // إعداد نظام الحجز
+        function setupBookingSystem() {
+            const serviceTypeSelect = document.getElementById('service-type');
+            const bookingTypeSelect = document.getElementById('booking-type');
+            const durationInput = document.getElementById('duration');
+            const servicePriceElement = document.getElementById('service-price');
+            const durationDisplayElement = document.getElementById('duration-display');
+            const bookingTypeDisplayElement = document.getElementById('booking-type-display');
+            const totalPriceElement = document.getElementById('total-price');
+
+            function updateBookingSummary() {
+                const selectedOption = serviceTypeSelect.options[serviceTypeSelect.selectedIndex];
+                const servicePrice = selectedOption ? parseInt(selectedOption.getAttribute('data-price') || 0) : 0;
+                const bookingType = bookingTypeSelect.value;
+                const duration = parseInt(durationInput.value) || 1;
+
+                let totalPrice = servicePrice * duration;
+
+                // تطبيق خصم حسب نوع الحجز
+                if (bookingType === 'weekly') {
+                    totalPrice = totalPrice * 0.9; // خصم 10%
+                } else if (bookingType === 'monthly') {
+                    totalPrice = totalPrice * 0.8; // خصم 20%
+                }
+
+                // تحديث العرض
+                servicePriceElement.textContent = `${servicePrice.toLocaleString()} ل.ل`;
+                durationDisplayElement.textContent = `${duration} ${duration === 1 ? 'يوم' : 'أيام'}`;
+
+                let bookingTypeText = 'مرة واحدة';
+                if (bookingType === 'daily') bookingTypeText = 'يومي';
+                else if (bookingType === 'weekly') bookingTypeText = 'أسبوعي';
+                else if (bookingType === 'monthly') bookingTypeText = 'شهري';
+
+                bookingTypeDisplayElement.textContent = bookingTypeText;
+                totalPriceElement.textContent = `${totalPrice.toLocaleString()} ل.ل`;
+            }
+
+            // إضافة مستمعي الأحداث
+            serviceTypeSelect.addEventListener('change', updateBookingSummary);
+            bookingTypeSelect.addEventListener('change', updateBookingSummary);
+            durationInput.addEventListener('input', updateBookingSummary);
+
+            // التبويبات في نظام الحجز
+            document.querySelectorAll('.booking-tab').forEach(tab => {
+                tab.addEventListener('click', function () {
+                    // إزالة النشاط من جميع الألسنة
+                    document.querySelectorAll('.booking-tab').forEach(t => t.classList.remove('active'));
+                    // إضافة النشاط للسان المحدد
+                    this.classList.add('active');
+
+                    const tabType = this.getAttribute('data-tab');
+                    // هنا يمكن إضافة منطق لتغيير نموذج الحجز حسب نوع الحجز
+                });
+            });
+
+            // تحديث الملخص في البداية
+            updateBookingSummary();
+        }
+
+        // تنشيط الأسئلة الشائعة
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const item = question.parentNode;
+                item.classList.toggle('active');
+            });
+        });
+
+        // عداد الإحصائيات المتحرك
+        const counters = document.querySelectorAll('.stat-number');
+        const speed = 200;
+
+        function animateCounter(counter) {
+            const target = +counter.getAttribute('data-count');
+            const count = +counter.innerText;
+            const increment = target / speed;
+
+            if (count < target) {
+                counter.innerText = Math.ceil(count + increment);
+                setTimeout(() => animateCounter(counter), 10);
+            } else {
+                counter.innerText = target;
+            }
+        }
+
+        // تشغيل العداد عند التمرير للقسم
+        const statsSection = document.querySelector('.stats');
+        let counted = false;
+
+        function checkScroll() {
+            const sectionPos = statsSection.getBoundingClientRect().top;
+            const screenPos = window.innerHeight / 1.3;
+
+            if (sectionPos < screenPos && !counted) {
+                counters.forEach(counter => {
+                    animateCounter(counter);
+                });
+                counted = true;
+            }
+        }
+
+        window.addEventListener('scroll', checkScroll);
+        checkScroll(); // تحقق مرة واحدة عند التحميل
+
+        // تأثير الشفافية للشريط العلوي عند التمرير
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.backgroundColor = 'rgba(18, 18, 18, 0.95)';
+                header.style.backdropFilter = 'blur(10px)';
+            } else {
+                header.style.backgroundColor = 'rgba(18, 18, 18, 0.95)';
+                header.style.backdropFilter = 'blur(10px)';
+            }
+        });
+
+        // إرسال نماذج الحجز والتواصل
+        document.getElementById('booking-form')?.addEventListener('submit', function (e) {
+            e.preventDefault();
+            alert('شكراً لك! تم استلام طلبك بنجاح وسنتصل بك في أقرب وقت لتأكيد الحجز.');
+            this.reset();
+            // إعادة حساب الملخص بعد إعادة تعيين النموذج
+            setTimeout(() => {
+                const event = new Event('change');
+                document.getElementById('service-type').dispatchEvent(event);
+            }, 100);
+        });
+
+        document.querySelector('.contact-form')?.addEventListener('submit', function (e) {
+            e.preventDefault();
+            alert('شكراً لك! تم استلام رسالتك بنجاح وسنرد عليك في أقرب وقت.');
+            this.reset();
+        });
+    </script>
+</body>
+
+</html>
